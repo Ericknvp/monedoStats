@@ -16,8 +16,18 @@ export function Sidebar({
   const pathname = usePathname();
   const { logout, user } = useAuth();
   const { unreadCount } = useNotifications();
-  const isProfiles = pathname === "/dashboard";
-  const isActivity = pathname === "/dashboard/activity";
+
+  const navItems = [
+    { href: "/dashboard", label: "Perfiles", icon: "grid_view" },
+    { href: "/dashboard/accounts", label: "Cuentas", icon: "account_balance" },
+    {
+      href: "/dashboard/activity",
+      label: "Actividad",
+      icon: "history",
+      badge: unreadCount,
+    },
+    { href: "/dashboard/ranking", label: "Ranking", icon: "leaderboard" },
+  ];
 
   return (
     <>
@@ -52,35 +62,29 @@ export function Sidebar({
         </div>
 
         <nav className="flex-1 space-y-1 px-3 py-3">
-          <Link
-            href="/dashboard"
-            onClick={onClose}
-            className={`flex items-center gap-2.5 rounded-full px-4 py-2.5 text-sm font-medium transition-colors ${
-              isProfiles
-                ? "bg-accent text-on-accent"
-                : "text-on-primary/70 hover:bg-white/10 hover:text-on-primary"
-            }`}
-          >
-            <Icon name="grid_view" size={19} filled={isProfiles} />
-            Perfiles
-          </Link>
-          <Link
-            href="/dashboard/activity"
-            onClick={onClose}
-            className={`flex items-center gap-2.5 rounded-full px-4 py-2.5 text-sm font-medium transition-colors ${
-              isActivity
-                ? "bg-accent text-on-accent"
-                : "text-on-primary/70 hover:bg-white/10 hover:text-on-primary"
-            }`}
-          >
-            <Icon name="history" size={19} filled={isActivity} />
-            Actividad
-            {unreadCount > 0 && (
-              <span className="ml-auto flex h-4 min-w-4 items-center justify-center rounded-full bg-critical px-1 text-[10px] font-semibold text-white">
-                {unreadCount > 99 ? "99+" : unreadCount}
-              </span>
-            )}
-          </Link>
+          {navItems.map((item) => {
+            const isActive = pathname === item.href;
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                onClick={onClose}
+                className={`flex items-center gap-2.5 rounded-full px-4 py-2.5 text-sm font-medium transition-colors ${
+                  isActive
+                    ? "bg-accent text-on-accent"
+                    : "text-on-primary/70 hover:bg-white/10 hover:text-on-primary"
+                }`}
+              >
+                <Icon name={item.icon} size={19} filled={isActive} />
+                {item.label}
+                {!!item.badge && (
+                  <span className="ml-auto flex h-4 min-w-4 items-center justify-center rounded-full bg-critical px-1 text-[10px] font-semibold text-white">
+                    {item.badge > 99 ? "99+" : item.badge}
+                  </span>
+                )}
+              </Link>
+            );
+          })}
         </nav>
 
         <div className="border-t border-white/10 p-3">
