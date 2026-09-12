@@ -12,8 +12,9 @@
       "collectionGroup": "transactions",
       "queryScope": "COLLECTION",
       "fields": [
+        { "fieldPath": "isIncome", "order": "ASCENDING" },
         { "fieldPath": "userId", "order": "ASCENDING" },
-        { "fieldPath": "isIncome", "order": "ASCENDING" }
+        { "fieldPath": "amount", "order": "ASCENDING" }
       ]
     }
   ],
