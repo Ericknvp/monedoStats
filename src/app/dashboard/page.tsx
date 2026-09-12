@@ -6,20 +6,32 @@ import { collection, onSnapshot, orderBy, query } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { AppUser } from "@/lib/types";
 import { formatDate } from "@/lib/format";
+import { ErrorBanner, permissionErrorMessage } from "@/components/ErrorBanner";
 
 export default function ProfilesPage() {
   const [users, setUsers] = useState<AppUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const q = query(collection(db, "users"), orderBy("createdAt", "desc"));
-    const unsub = onSnapshot(q, (snap) => {
-      setUsers(
-        snap.docs.map((d) => ({ id: d.id, ...(d.data() as Omit<AppUser, "id">) }))
-      );
-      setLoading(false);
-    });
+    const unsub = onSnapshot(
+      q,
+      (snap) => {
+        setUsers(
+          snap.docs.map((d) => ({
+            id: d.id,
+            ...(d.data() as Omit<AppUser, "id">),
+          })),
+        );
+        setLoading(false);
+      },
+      (err) => {
+        setError(permissionErrorMessage(err));
+        setLoading(false);
+      },
+    );
     return () => unsub();
   }, []);
 
@@ -30,6 +42,10 @@ export default function ProfilesPage() {
       u.email?.toLowerCase().includes(term)
     );
   });
+
+  if (error) {
+    return <ErrorBanner message={error} />;
+  }
 
   return (
     <div>
@@ -70,13 +86,19 @@ export default function ProfilesPage() {
           <tbody className="divide-y divide-slate-100">
             {loading ? (
               <tr>
-                <td colSpan={4} className="px-4 py-6 text-center text-sm text-slate-400">
+                <td
+                  colSpan={4}
+                  className="px-4 py-6 text-center text-sm text-slate-400"
+                >
                   Cargando…
                 </td>
               </tr>
             ) : filtered.length === 0 ? (
               <tr>
-                <td colSpan={4} className="px-4 py-6 text-center text-sm text-slate-400">
+                <td
+                  colSpan={4}
+                  className="px-4 py-6 text-center text-sm text-slate-400"
+                >
                   Sin resultados.
                 </td>
               </tr>
@@ -91,7 +113,9 @@ export default function ProfilesPage() {
                       {u.username || "(sin nombre)"}
                     </Link>
                   </td>
-                  <td className="px-4 py-3 text-sm text-slate-600">{u.email}</td>
+                  <td className="px-4 py-3 text-sm text-slate-600">
+                    {u.email}
+                  </td>
                   <td className="px-4 py-3 text-sm text-slate-600">
                     {u.currency || "—"}
                   </td>

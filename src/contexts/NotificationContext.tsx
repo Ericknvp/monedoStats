@@ -63,70 +63,83 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!user) return;
 
-    const unsubUsers = onSnapshot(collection(db, "users"), (snap) => {
-      snap.forEach((doc) => {
-        const data = doc.data();
-        usersMapRef.current[doc.id] = data.username || data.email || doc.id;
-      });
-    });
-
-    const unsubTx = onSnapshot(collection(db, "transactions"), (snap) => {
-      if (isInitialTx.current) {
-        isInitialTx.current = false;
-        return;
-      }
-      snap.docChanges().forEach((change) => {
-        if (change.type !== "added") return;
-        const data = change.doc.data();
-        const username = usernameFor(data.userId);
-        const kind = data.isIncome ? "un ingreso" : "un gasto";
-        pushEvent({
-          type: "transaction",
-          userId: data.userId,
-          username,
-          message: `${username} registró ${kind} de ${formatCurrency(
-            data.amount || 0
-          )} en ${data.category || "Sin categoría"}`,
-        });
-      });
-    });
-
-    const unsubGoals = onSnapshot(collection(db, "goals"), (snap) => {
-      if (isInitialGoals.current) {
+    const unsubUsers = onSnapshot(
+      collection(db, "users"),
+      (snap) => {
         snap.forEach((doc) => {
-          goalAmountsRef.current[doc.id] = doc.data().savedAmount || 0;
+          const data = doc.data();
+          usersMapRef.current[doc.id] = data.username || data.email || doc.id;
         });
-        isInitialGoals.current = false;
-        return;
-      }
-      snap.docChanges().forEach((change) => {
-        const data = change.doc.data();
-        const username = usernameFor(data.userId);
-        if (change.type === "added") {
-          goalAmountsRef.current[change.doc.id] = data.savedAmount || 0;
-          pushEvent({
-            type: "goal_created",
-            userId: data.userId,
-            username,
-            message: `${username} creó una nueva meta: "${data.title}"`,
-          });
-        } else if (change.type === "modified") {
-          const prevAmount = goalAmountsRef.current[change.doc.id] ?? data.savedAmount;
-          const diff = (data.savedAmount || 0) - prevAmount;
-          goalAmountsRef.current[change.doc.id] = data.savedAmount || 0;
-          const message =
-            diff > 0
-              ? `${username} aportó ${formatCurrency(diff)} a su meta "${data.title}"`
-              : `${username} actualizó su meta "${data.title}"`;
-          pushEvent({
-            type: "goal_updated",
-            userId: data.userId,
-            username,
-            message,
-          });
+      },
+      (err) => console.error("users listener failed:", err),
+    );
+
+    const unsubTx = onSnapshot(
+      collection(db, "transactions"),
+      (snap) => {
+        if (isInitialTx.current) {
+          isInitialTx.current = false;
+          return;
         }
-      });
-    });
+        snap.docChanges().forEach((change) => {
+          if (change.type !== "added") return;
+          const data = change.doc.data();
+          const username = usernameFor(data.userId);
+          const kind = data.isIncome ? "un ingreso" : "un gasto";
+          pushEvent({
+            type: "transaction",
+            userId: data.userId,
+            username,
+            message: `${username} registró ${kind} de ${formatCurrency(
+              data.amount || 0,
+            )} en ${data.category || "Sin categoría"}`,
+          });
+        });
+      },
+      (err) => console.error("transactions listener failed:", err),
+    );
+
+    const unsubGoals = onSnapshot(
+      collection(db, "goals"),
+      (snap) => {
+        if (isInitialGoals.current) {
+          snap.forEach((doc) => {
+            goalAmountsRef.current[doc.id] = doc.data().savedAmount || 0;
+          });
+          isInitialGoals.current = false;
+          return;
+        }
+        snap.docChanges().forEach((change) => {
+          const data = change.doc.data();
+          const username = usernameFor(data.userId);
+          if (change.type === "added") {
+            goalAmountsRef.current[change.doc.id] = data.savedAmount || 0;
+            pushEvent({
+              type: "goal_created",
+              userId: data.userId,
+              username,
+              message: `${username} creó una nueva meta: "${data.title}"`,
+            });
+          } else if (change.type === "modified") {
+            const prevAmount =
+              goalAmountsRef.current[change.doc.id] ?? data.savedAmount;
+            const diff = (data.savedAmount || 0) - prevAmount;
+            goalAmountsRef.current[change.doc.id] = data.savedAmount || 0;
+            const message =
+              diff > 0
+                ? `${username} aportó ${formatCurrency(diff)} a su meta "${data.title}"`
+                : `${username} actualizó su meta "${data.title}"`;
+            pushEvent({
+              type: "goal_updated",
+              userId: data.userId,
+              username,
+              message,
+            });
+          }
+        });
+      },
+      (err) => console.error("goals listener failed:", err),
+    );
 
     return () => {
       unsubUsers();

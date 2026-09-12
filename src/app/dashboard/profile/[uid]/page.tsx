@@ -21,6 +21,7 @@ import {
 import { db } from "@/lib/firebase";
 import { AppUser, Account, Budget, Goal, Transaction } from "@/lib/types";
 import { formatCurrency, formatDate } from "@/lib/format";
+import { ErrorBanner, permissionErrorMessage } from "@/components/ErrorBanner";
 import {
   Bar,
   BarChart,
@@ -51,23 +52,26 @@ export default function ProfileDetailPage() {
   const [goals, setGoals] = useState<Goal[]>([]);
   const [budgets, setBudgets] = useState<Budget[]>([]);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [lastDoc, setLastDoc] = useState<QueryDocumentSnapshot<DocumentData> | null>(
-    null
-  );
+  const [lastDoc, setLastDoc] =
+    useState<QueryDocumentSnapshot<DocumentData> | null>(null);
   const [hasMore, setHasMore] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const loadFirstPage = useCallback(async (userId: string) => {
     const q = query(
       collection(db, "transactions"),
       where("userId", "==", userId),
       orderBy("date", "desc"),
-      limit(PAGE_SIZE)
+      limit(PAGE_SIZE),
     );
     const snap = await getDocs(q);
     setTransactions(
-      snap.docs.map((d) => ({ id: d.id, ...(d.data() as Omit<Transaction, "id">) }))
+      snap.docs.map((d) => ({
+        id: d.id,
+        ...(d.data() as Omit<Transaction, "id">),
+      })),
     );
     setLastDoc(snap.docs[snap.docs.length - 1] ?? null);
     setHasMore(snap.docs.length === PAGE_SIZE);
@@ -82,15 +86,20 @@ export default function ProfileDetailPage() {
         where("userId", "==", uid),
         orderBy("date", "desc"),
         startAfter(lastDoc),
-        limit(PAGE_SIZE)
+        limit(PAGE_SIZE),
       );
       const snap = await getDocs(q);
       setTransactions((prev) => [
         ...prev,
-        ...snap.docs.map((d) => ({ id: d.id, ...(d.data() as Omit<Transaction, "id">) })),
+        ...snap.docs.map((d) => ({
+          id: d.id,
+          ...(d.data() as Omit<Transaction, "id">),
+        })),
       ]);
       setLastDoc(snap.docs[snap.docs.length - 1] ?? null);
       setHasMore(snap.docs.length === PAGE_SIZE);
+    } catch (err) {
+      setError(permissionErrorMessage(err));
     } finally {
       setLoadingMore(false);
     }
@@ -102,10 +111,23 @@ export default function ProfileDetailPage() {
 
     async function load() {
       setLoading(true);
+      setError(null);
+      try {
+        await loadInner();
+      } catch (err) {
+        if (!cancelled) setError(permissionErrorMessage(err));
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
 
+    async function loadInner() {
       const userSnap = await getDoc(doc(db, "users", uid));
       if (!cancelled && userSnap.exists()) {
-        setProfile({ id: userSnap.id, ...(userSnap.data() as Omit<AppUser, "id">) });
+        setProfile({
+          id: userSnap.id,
+          ...(userSnap.data() as Omit<AppUser, "id">),
+        });
       }
 
       const [accountsSnap, goalsSnap, budgetsSnap] = await Promise.all([
@@ -115,15 +137,21 @@ export default function ProfileDetailPage() {
       ]);
       if (!cancelled) {
         setAccounts(
-          accountsSnap.docs.map((d) => ({ id: d.id, ...(d.data() as Omit<Account, "id">) }))
+          accountsSnap.docs.map((d) => ({
+            id: d.id,
+            ...(d.data() as Omit<Account, "id">),
+          })),
         );
         setGoals(
           goalsSnap.docs
             .map((d) => ({ id: d.id, ...(d.data() as Omit<Goal, "id">) }))
-            .sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1))
+            .sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1)),
         );
         setBudgets(
-          budgetsSnap.docs.map((d) => ({ id: d.id, ...(d.data() as Omit<Budget, "id">) }))
+          budgetsSnap.docs.map((d) => ({
+            id: d.id,
+            ...(d.data() as Omit<Budget, "id">),
+          })),
         );
       }
 
@@ -132,17 +160,17 @@ export default function ProfileDetailPage() {
           query(
             collection(db, "transactions"),
             where("userId", "==", uid),
-            where("isIncome", "==", true)
+            where("isIncome", "==", true),
           ),
-          { count: count(), total: sum("amount") }
+          { count: count(), total: sum("amount") },
         ),
         getAggregateFromServer(
           query(
             collection(db, "transactions"),
             where("userId", "==", uid),
-            where("isIncome", "==", false)
+            where("isIncome", "==", false),
           ),
-          { count: count(), total: sum("amount") }
+          { count: count(), total: sum("amount") },
         ),
       ]);
       if (!cancelled) {
@@ -155,7 +183,6 @@ export default function ProfileDetailPage() {
       }
 
       await loadFirstPage(uid);
-      if (!cancelled) setLoading(false);
     }
 
     load();
@@ -166,6 +193,10 @@ export default function ProfileDetailPage() {
 
   if (loading) {
     return <p className="text-sm text-slate-500">Cargando perfil…</p>;
+  }
+
+  if (error) {
+    return <ErrorBanner message={error} />;
   }
 
   if (!profile) {
@@ -200,7 +231,9 @@ export default function ProfileDetailPage() {
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-4">
         <SummaryCard
           label="Movimientos"
-          value={String((totals?.incomeCount || 0) + (totals?.expenseCount || 0))}
+          value={String(
+            (totals?.incomeCount || 0) + (totals?.expenseCount || 0),
+          )}
         />
         <SummaryCard
           label="Ingresos"
@@ -218,13 +251,15 @@ export default function ProfileDetailPage() {
           label="Balance neto"
           value={formatCurrency(
             (totals?.incomeTotal || 0) - (totals?.expenseTotal || 0),
-            profile.currency
+            profile.currency,
           )}
         />
       </div>
 
       <section className="rounded-lg border border-slate-200 bg-white p-4">
-        <h2 className="text-sm font-semibold text-slate-700">Ingresos vs. gastos</h2>
+        <h2 className="text-sm font-semibold text-slate-700">
+          Ingresos vs. gastos
+        </h2>
         <div className="mt-2 h-56">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={chartData}>
@@ -232,7 +267,9 @@ export default function ProfileDetailPage() {
               <XAxis dataKey="name" tick={{ fontSize: 12 }} />
               <YAxis tick={{ fontSize: 12 }} width={80} />
               <Tooltip
-                formatter={(v) => formatCurrency(Number(v) || 0, profile.currency)}
+                formatter={(v) =>
+                  formatCurrency(Number(v) || 0, profile.currency)
+                }
               />
               <Bar dataKey="value" radius={[4, 4, 0, 0]} fill="#0f172a" />
             </BarChart>
@@ -248,7 +285,10 @@ export default function ProfileDetailPage() {
           ) : (
             <ul className="mt-3 divide-y divide-slate-100">
               {accounts.map((a) => (
-                <li key={a.id} className="flex items-center justify-between py-2">
+                <li
+                  key={a.id}
+                  className="flex items-center justify-between py-2"
+                >
                   <span className="text-sm text-slate-700">{a.name}</span>
                   <span className="text-sm font-medium text-slate-900">
                     {formatCurrency(a.balance, profile.currency)}
@@ -266,7 +306,10 @@ export default function ProfileDetailPage() {
           ) : (
             <ul className="mt-3 divide-y divide-slate-100">
               {budgets.map((b) => (
-                <li key={b.id} className="flex items-center justify-between py-2">
+                <li
+                  key={b.id}
+                  className="flex items-center justify-between py-2"
+                >
                   <span className="text-sm text-slate-700">{b.category}</span>
                   <span className="text-sm font-medium text-slate-900">
                     {formatCurrency(b.monthlyLimit, profile.currency)}/mes
@@ -279,18 +322,29 @@ export default function ProfileDetailPage() {
       </div>
 
       <section className="rounded-lg border border-slate-200 bg-white p-4">
-        <h2 className="text-sm font-semibold text-slate-700">Metas de ahorro</h2>
+        <h2 className="text-sm font-semibold text-slate-700">
+          Metas de ahorro
+        </h2>
         {goals.length === 0 ? (
           <p className="mt-3 text-sm text-slate-400">Sin metas.</p>
         ) : (
           <div className="mt-3 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {goals.map((g) => {
-              const pct = g.targetAmount > 0
-                ? Math.min(100, Math.round((g.savedAmount / g.targetAmount) * 100))
-                : 0;
+              const pct =
+                g.targetAmount > 0
+                  ? Math.min(
+                      100,
+                      Math.round((g.savedAmount / g.targetAmount) * 100),
+                    )
+                  : 0;
               return (
-                <div key={g.id} className="rounded-md border border-slate-200 p-3">
-                  <p className="text-sm font-medium text-slate-800">{g.title}</p>
+                <div
+                  key={g.id}
+                  className="rounded-md border border-slate-200 p-3"
+                >
+                  <p className="text-sm font-medium text-slate-800">
+                    {g.title}
+                  </p>
                   <p className="mt-1 text-xs text-slate-500">
                     {formatCurrency(g.savedAmount, profile.currency)} de{" "}
                     {formatCurrency(g.targetAmount, profile.currency)}
@@ -301,7 +355,9 @@ export default function ProfileDetailPage() {
                       style={{ width: `${pct}%` }}
                     />
                   </div>
-                  <p className="mt-1 text-right text-xs text-slate-400">{pct}%</p>
+                  <p className="mt-1 text-right text-xs text-slate-400">
+                    {pct}%
+                  </p>
                 </div>
               );
             })}
@@ -316,26 +372,45 @@ export default function ProfileDetailPage() {
         <table className="min-w-full divide-y divide-slate-200">
           <thead className="bg-slate-50">
             <tr>
-              <th className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wide text-slate-500">Fecha</th>
-              <th className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wide text-slate-500">Título</th>
-              <th className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wide text-slate-500">Categoría</th>
-              <th className="px-4 py-2 text-right text-xs font-medium uppercase tracking-wide text-slate-500">Monto</th>
-              <th className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wide text-slate-500">Tipo</th>
+              <th className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wide text-slate-500">
+                Fecha
+              </th>
+              <th className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wide text-slate-500">
+                Título
+              </th>
+              <th className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wide text-slate-500">
+                Categoría
+              </th>
+              <th className="px-4 py-2 text-right text-xs font-medium uppercase tracking-wide text-slate-500">
+                Monto
+              </th>
+              <th className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wide text-slate-500">
+                Tipo
+              </th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
             {transactions.length === 0 ? (
               <tr>
-                <td colSpan={5} className="px-4 py-6 text-center text-sm text-slate-400">
+                <td
+                  colSpan={5}
+                  className="px-4 py-6 text-center text-sm text-slate-400"
+                >
                   Sin movimientos.
                 </td>
               </tr>
             ) : (
               transactions.map((t) => (
                 <tr key={t.id} className="hover:bg-slate-50">
-                  <td className="px-4 py-2 text-sm text-slate-600">{formatDate(t.date)}</td>
-                  <td className="px-4 py-2 text-sm text-slate-800">{t.title}</td>
-                  <td className="px-4 py-2 text-sm text-slate-600">{t.category}</td>
+                  <td className="px-4 py-2 text-sm text-slate-600">
+                    {formatDate(t.date)}
+                  </td>
+                  <td className="px-4 py-2 text-sm text-slate-800">
+                    {t.title}
+                  </td>
+                  <td className="px-4 py-2 text-sm text-slate-600">
+                    {t.category}
+                  </td>
                   <td
                     className={`px-4 py-2 text-right text-sm font-medium ${
                       t.isIncome ? "text-emerald-600" : "text-red-600"
@@ -345,7 +420,11 @@ export default function ProfileDetailPage() {
                     {formatCurrency(t.amount, profile.currency)}
                   </td>
                   <td className="px-4 py-2 text-sm text-slate-600">
-                    {t.isTransfer ? "Transferencia" : t.isIncome ? "Ingreso" : "Gasto"}
+                    {t.isTransfer
+                      ? "Transferencia"
+                      : t.isIncome
+                        ? "Ingreso"
+                        : "Gasto"}
                   </td>
                 </tr>
               ))
@@ -389,8 +468,8 @@ function SummaryCard({
           tone === "positive"
             ? "text-emerald-600"
             : tone === "negative"
-            ? "text-red-600"
-            : "text-slate-900"
+              ? "text-red-600"
+              : "text-slate-900"
         }`}
       >
         {value}
