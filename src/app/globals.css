@@ -1,66 +1,117 @@
 @import "tailwindcss";
 
 :root {
-  --background: #0a0f1c;
-  --foreground: #f1f5f9;
-  --page-plane: #0a0f1c;
-  --surface: #101828;
-  --surface-2: #16213a;
-  --border-soft: rgba(148, 163, 184, 0.14);
-  --text-primary: #f1f5f9;
-  --text-secondary: #93a2ba;
-  --text-muted: #64748b;
-  --accent: #4a8dfa;
-  --accent-dark: #2563eb;
-  --accent-soft: rgba(74, 141, 250, 0.14);
-  --accent-glow: rgba(74, 141, 250, 0.35);
-  --good: #34d399;
-  --good-soft: rgba(52, 211, 153, 0.12);
-  --critical: #f87171;
-  --critical-soft: rgba(248, 113, 113, 0.12);
+  --background: #fcf9f8;
+  --foreground: #1c1b1b;
+
+  --primary: #001f2d;
+  --on-primary: #ffffff;
+  --primary-container: #0c3547;
+  --on-primary-container: #7a9eb3;
+
+  --secondary: #006c4b;
+  --on-secondary: #ffffff;
+  --secondary-container: #96f6c8;
+  --on-secondary-container: #00734f;
+
+  --surface-lowest: #ffffff;
+  --surface-low: #f6f3f2;
+  --surface-container: #f0edec;
+  --surface-high: #ebe7e7;
+  --outline-variant: #c1c7cc;
+
+  --on-surface: #1c1b1b;
+  --on-surface-variant: #42484c;
+  --muted: #7a8085;
+
+  --critical: #b3261e;
+  --critical-soft: #fbeceb;
+  --secondary-soft: #e3f7ee;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0d1417;
+    --foreground: #e3e2e1;
+
+    --on-primary-container: #a8c7db;
+
+    --secondary: #5be0ab;
+    --on-secondary: #00391f;
+    --secondary-container: #00522f;
+    --on-secondary-container: #7bf0bd;
+
+    --surface-lowest: #172024;
+    --surface-low: #1c262a;
+    --surface-container: #222d31;
+    --surface-high: #2a363b;
+    --outline-variant: #3b464a;
+
+    --on-surface: #e3e2e1;
+    --on-surface-variant: #c1c7cc;
+    --muted: #8b9599;
+
+    --critical: #ffb4ab;
+    --critical-soft: #3a1f1c;
+    --secondary-soft: #163429;
+  }
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --color-page: var(--page-plane);
-  --color-surface: var(--surface);
-  --color-surface-2: var(--surface-2);
-  --color-border-soft: var(--border-soft);
-  --color-text-primary: var(--text-primary);
-  --color-text-secondary: var(--text-secondary);
-  --color-text-muted: var(--text-muted);
-  --color-accent: var(--accent);
-  --color-accent-dark: var(--accent-dark);
-  --color-accent-soft: var(--accent-soft);
-  --color-good: var(--good);
-  --color-good-soft: var(--good-soft);
+  --color-page: var(--background);
+
+  --color-primary: var(--primary);
+  --color-on-primary: var(--on-primary);
+  --color-primary-container: var(--primary-container);
+  --color-on-primary-container: var(--on-primary-container);
+
+  --color-accent: var(--secondary);
+  --color-accent-dark: var(--on-secondary-container);
+  --color-accent-soft: var(--secondary-soft);
+  --color-on-accent: var(--on-secondary);
+
+  --color-surface: var(--surface-lowest);
+  --color-surface-2: var(--surface-low);
+  --color-surface-3: var(--surface-container);
+  --color-border-soft: var(--outline-variant);
+
+  --color-text-primary: var(--on-surface);
+  --color-text-secondary: var(--on-surface-variant);
+  --color-text-muted: var(--muted);
+
+  --color-good: var(--secondary);
+  --color-good-soft: var(--secondary-soft);
   --color-critical: var(--critical);
   --color-critical-soft: var(--critical-soft);
-  --font-sans: var(--font-geist-sans);
+
+  --font-sans: var(--font-body);
+  --font-display: var(--font-heading);
   --font-mono: var(--font-geist-mono);
 }
 
 body {
-  font-family: Arial, Helvetica, sans-serif;
-  background:
-    radial-gradient(
-      1200px 600px at 15% -10%,
-      rgba(74, 141, 250, 0.16),
-      transparent 60%
-    ),
-    var(--page-plane);
-  background-attachment: fixed;
+  background: var(--background);
+  color: var(--on-surface);
 }
 
-::selection {
-  background: var(--accent-glow);
+.material-symbols-outlined {
+  font-variation-settings:
+    "FILL" 0,
+    "wght" 500,
+    "GRAD" 0,
+    "opsz" 24;
+  font-size: 1.25rem;
+  line-height: 1;
+  vertical-align: middle;
+  display: inline-block;
 }
 
-.glow-ring {
+.card-shadow {
   box-shadow:
-    0 0 0 1px var(--border-soft),
-    0 8px 24px -8px var(--accent-glow);
+    0 1px 2px rgba(28, 27, 27, 0.04),
+    0 4px 16px -4px rgba(28, 27, 27, 0.08);
 }
 
 @keyframes toast-in {

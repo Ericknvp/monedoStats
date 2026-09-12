@@ -18,22 +18,11 @@ import {
   QueryDocumentSnapshot,
   DocumentData,
 } from "firebase/firestore";
-import {
-  ArrowLeft,
-  Landmark,
-  ListChecks,
-  PiggyBank,
-  Receipt,
-  Scale,
-  Target,
-  TrendingDown,
-  TrendingUp,
-  Users,
-} from "lucide-react";
 import { db } from "@/lib/firebase";
 import { AppUser, Account, Budget, Goal, Transaction } from "@/lib/types";
 import { formatCurrency, formatDate } from "@/lib/format";
 import { ErrorBanner, permissionErrorMessage } from "@/components/ErrorBanner";
+import { Icon } from "@/components/Icon";
 import {
   Bar,
   BarChart,
@@ -47,8 +36,8 @@ import {
 } from "recharts";
 
 const PAGE_SIZE = 25;
-const GOOD = "#34d399";
-const CRITICAL = "#f87171";
+const GOOD = "#006c4b";
+const CRITICAL = "#b3261e";
 
 interface Totals {
   incomeCount: number;
@@ -234,17 +223,17 @@ export default function ProfileDetailPage() {
       <div>
         <button
           onClick={() => router.push("/dashboard")}
-          className="flex items-center gap-1.5 text-sm text-text-secondary hover:text-slate-100"
+          className="flex items-center gap-1.5 text-sm text-text-secondary hover:text-text-primary"
         >
-          <ArrowLeft size={15} />
+          <Icon name="arrow_back" size={16} />
           Volver a perfiles
         </button>
         <div className="mt-3 flex items-center gap-3">
-          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-accent to-accent-dark text-base font-semibold text-white">
+          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-accent text-base font-semibold text-on-accent">
             {(profile.username || profile.email || "?").charAt(0).toUpperCase()}
           </span>
           <div>
-            <h1 className="text-xl font-semibold text-slate-100">
+            <h1 className="font-display text-xl font-bold text-text-primary">
               {profile.username}
             </h1>
             <p className="text-sm text-text-secondary">
@@ -257,7 +246,7 @@ export default function ProfileDetailPage() {
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-4">
         <SummaryCard
-          icon={<Receipt size={17} />}
+          icon="receipt_long"
           label="Movimientos"
           value={String(
             (totals?.incomeCount || 0) + (totals?.expenseCount || 0),
@@ -265,21 +254,21 @@ export default function ProfileDetailPage() {
           tone="neutral"
         />
         <SummaryCard
-          icon={<TrendingUp size={17} />}
+          icon="trending_up"
           label="Ingresos"
           value={formatCurrency(totals?.incomeTotal || 0, profile.currency)}
           hint={`${totals?.incomeCount || 0} movimientos`}
           tone="positive"
         />
         <SummaryCard
-          icon={<TrendingDown size={17} />}
+          icon="trending_down"
           label="Gastos"
           value={formatCurrency(totals?.expenseTotal || 0, profile.currency)}
           hint={`${totals?.expenseCount || 0} movimientos`}
           tone="negative"
         />
         <SummaryCard
-          icon={<Scale size={17} />}
+          icon="balance"
           label="Balance neto"
           value={formatCurrency(
             (totals?.incomeTotal || 0) - (totals?.expenseTotal || 0),
@@ -289,33 +278,33 @@ export default function ProfileDetailPage() {
         />
       </div>
 
-      <section className="glow-ring rounded-lg border border-border-soft bg-surface p-4">
-        <h2 className="text-sm font-semibold text-slate-200">
+      <section className="card-shadow rounded-2xl border border-border-soft bg-surface p-4">
+        <h2 className="text-sm font-semibold text-text-primary">
           Ingresos vs. gastos
         </h2>
         <div className="mt-2 h-56">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={chartData} margin={{ top: 20, right: 8, left: 8 }}>
-              <CartesianGrid stroke="var(--border-soft)" vertical={false} />
+              <CartesianGrid stroke="var(--outline-variant)" vertical={false} />
               <XAxis
                 dataKey="name"
-                tick={{ fontSize: 12, fill: "var(--text-secondary)" }}
-                axisLine={{ stroke: "var(--border-soft)" }}
+                tick={{ fontSize: 12, fill: "var(--on-surface-variant)" }}
+                axisLine={{ stroke: "var(--outline-variant)" }}
                 tickLine={false}
               />
               <YAxis
-                tick={{ fontSize: 12, fill: "var(--text-secondary)" }}
+                tick={{ fontSize: 12, fill: "var(--on-surface-variant)" }}
                 axisLine={false}
                 tickLine={false}
                 width={80}
               />
               <Tooltip
-                cursor={{ fill: "rgba(148,163,184,0.06)" }}
+                cursor={{ fill: "rgba(0,31,45,0.04)" }}
                 contentStyle={{
-                  background: "var(--surface-2)",
-                  border: "1px solid var(--border-soft)",
-                  borderRadius: 8,
-                  color: "#f1f5f9",
+                  background: "var(--surface-lowest)",
+                  border: "1px solid var(--outline-variant)",
+                  borderRadius: 12,
+                  color: "var(--on-surface)",
                   fontSize: 13,
                 }}
                 formatter={(v) =>
@@ -332,7 +321,7 @@ export default function ProfileDetailPage() {
                   formatter={(v) =>
                     formatCurrency(Number(v) || 0, profile.currency)
                   }
-                  style={{ fill: "var(--text-secondary)", fontSize: 12 }}
+                  style={{ fill: "var(--on-surface-variant)", fontSize: 12 }}
                 />
               </Bar>
             </BarChart>
@@ -341,9 +330,9 @@ export default function ProfileDetailPage() {
       </section>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <section className="glow-ring rounded-lg border border-border-soft bg-surface p-4">
-          <h2 className="flex items-center gap-2 text-sm font-semibold text-slate-200">
-            <Landmark size={16} className="text-accent" />
+        <section className="card-shadow rounded-2xl border border-border-soft bg-surface p-4">
+          <h2 className="flex items-center gap-2 text-sm font-semibold text-text-primary">
+            <Icon name="account_balance" size={18} className="text-accent" />
             Cuentas
           </h2>
           {accounts.length === 0 ? (
@@ -355,8 +344,8 @@ export default function ProfileDetailPage() {
                   key={a.id}
                   className="flex items-center justify-between py-2"
                 >
-                  <span className="text-sm text-slate-300">{a.name}</span>
-                  <span className="text-sm font-medium text-slate-100">
+                  <span className="text-sm text-text-secondary">{a.name}</span>
+                  <span className="text-sm font-medium text-text-primary">
                     {formatCurrency(a.balance, profile.currency)}
                   </span>
                 </li>
@@ -365,9 +354,9 @@ export default function ProfileDetailPage() {
           )}
         </section>
 
-        <section className="glow-ring rounded-lg border border-border-soft bg-surface p-4">
-          <h2 className="flex items-center gap-2 text-sm font-semibold text-slate-200">
-            <ListChecks size={16} className="text-accent" />
+        <section className="card-shadow rounded-2xl border border-border-soft bg-surface p-4">
+          <h2 className="flex items-center gap-2 text-sm font-semibold text-text-primary">
+            <Icon name="checklist" size={18} className="text-accent" />
             Presupuestos
           </h2>
           {budgets.length === 0 ? (
@@ -379,8 +368,10 @@ export default function ProfileDetailPage() {
                   key={b.id}
                   className="flex items-center justify-between py-2"
                 >
-                  <span className="text-sm text-slate-300">{b.category}</span>
-                  <span className="text-sm font-medium text-slate-100">
+                  <span className="text-sm text-text-secondary">
+                    {b.category}
+                  </span>
+                  <span className="text-sm font-medium text-text-primary">
                     {formatCurrency(b.monthlyLimit, profile.currency)}/mes
                   </span>
                 </li>
@@ -390,9 +381,9 @@ export default function ProfileDetailPage() {
         </section>
       </div>
 
-      <section className="glow-ring rounded-lg border border-border-soft bg-surface p-4">
-        <h2 className="flex items-center gap-2 text-sm font-semibold text-slate-200">
-          <PiggyBank size={16} className="text-accent" />
+      <section className="card-shadow rounded-2xl border border-border-soft bg-surface p-4">
+        <h2 className="flex items-center gap-2 text-sm font-semibold text-text-primary">
+          <Icon name="savings" size={18} className="text-accent" />
           Metas de ahorro
         </h2>
         {goals.length === 0 ? (
@@ -410,19 +401,23 @@ export default function ProfileDetailPage() {
               return (
                 <div
                   key={g.id}
-                  className="rounded-md border border-border-soft bg-surface-2 p-3"
+                  className="rounded-2xl border border-border-soft bg-surface-2 p-3"
                 >
-                  <p className="flex items-center gap-1.5 text-sm font-medium text-slate-200">
-                    <Target size={14} className="text-accent" />
+                  <p className="flex items-center gap-1.5 text-sm font-medium text-text-primary">
+                    <Icon
+                      name="track_changes"
+                      size={15}
+                      className="text-accent"
+                    />
                     {g.title}
                   </p>
                   <p className="mt-1 text-xs text-text-secondary">
                     {formatCurrency(g.savedAmount, profile.currency)} de{" "}
                     {formatCurrency(g.targetAmount, profile.currency)}
                   </p>
-                  <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-accent-soft">
+                  <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-surface-3">
                     <div
-                      className="h-full rounded-full bg-gradient-to-r from-accent to-accent-dark"
+                      className="h-full rounded-full bg-accent"
                       style={{ width: `${pct}%` }}
                     />
                   </div>
@@ -436,83 +431,88 @@ export default function ProfileDetailPage() {
         )}
       </section>
 
-      <section className="glow-ring rounded-lg border border-border-soft bg-surface">
-        <h2 className="flex items-center gap-2 border-b border-border-soft px-4 py-3 text-sm font-semibold text-slate-200">
-          <Receipt size={16} className="text-accent" />
+      <section className="card-shadow rounded-2xl border border-border-soft bg-surface">
+        <h2 className="flex items-center gap-2 border-b border-border-soft px-4 py-3 text-sm font-semibold text-text-primary">
+          <Icon name="receipt_long" size={18} className="text-accent" />
           Movimientos
         </h2>
-        <table className="min-w-full divide-y divide-border-soft">
-          <thead className="bg-surface-2">
-            <tr>
-              <th className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wide text-text-muted">
-                Fecha
-              </th>
-              <th className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wide text-text-muted">
-                Título
-              </th>
-              <th className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wide text-text-muted">
-                Categoría
-              </th>
-              <th className="px-4 py-2 text-right text-xs font-medium uppercase tracking-wide text-text-muted">
-                Monto
-              </th>
-              <th className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wide text-text-muted">
-                Tipo
-              </th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-border-soft">
-            {transactions.length === 0 ? (
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-border-soft">
+            <thead className="bg-surface-2">
               <tr>
-                <td colSpan={5} className="px-4 py-10 text-center">
-                  <Users
-                    size={20}
-                    className="mx-auto mb-2 text-text-muted"
-                    strokeWidth={1.5}
-                  />
-                  <p className="text-sm text-text-muted">Sin movimientos.</p>
-                </td>
+                <th className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wide text-text-muted">
+                  Fecha
+                </th>
+                <th className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wide text-text-muted">
+                  Título
+                </th>
+                <th className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wide text-text-muted">
+                  Categoría
+                </th>
+                <th className="px-4 py-2 text-right text-xs font-medium uppercase tracking-wide text-text-muted">
+                  Monto
+                </th>
+                <th className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wide text-text-muted">
+                  Tipo
+                </th>
               </tr>
-            ) : (
-              transactions.map((t) => (
-                <tr key={t.id} className="transition-colors hover:bg-surface-2">
-                  <td className="px-4 py-2 text-sm text-text-secondary">
-                    {formatDate(t.date)}
-                  </td>
-                  <td className="px-4 py-2 text-sm text-slate-200">
-                    {t.title}
-                  </td>
-                  <td className="px-4 py-2 text-sm text-text-secondary">
-                    <span className="rounded-full bg-surface-2 px-2 py-0.5 text-xs text-text-secondary">
-                      {t.category}
-                    </span>
-                  </td>
-                  <td
-                    className={`px-4 py-2 text-right text-sm font-medium tabular-nums ${
-                      t.isIncome ? "text-good" : "text-critical"
-                    }`}
-                  >
-                    {t.isIncome ? "+" : "-"}
-                    {formatCurrency(t.amount, profile.currency)}
-                  </td>
-                  <td className="px-4 py-2 text-sm text-text-secondary">
-                    {t.isTransfer
-                      ? "Transferencia"
-                      : t.isIncome
-                        ? "Ingreso"
-                        : "Gasto"}
+            </thead>
+            <tbody className="divide-y divide-border-soft">
+              {transactions.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="px-4 py-10 text-center">
+                    <Icon
+                      name="receipt_long"
+                      size={24}
+                      className="mx-auto mb-2 text-text-muted"
+                    />
+                    <p className="text-sm text-text-muted">Sin movimientos.</p>
                   </td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+              ) : (
+                transactions.map((t) => (
+                  <tr
+                    key={t.id}
+                    className="transition-colors hover:bg-surface-2"
+                  >
+                    <td className="px-4 py-2 text-sm text-text-secondary">
+                      {formatDate(t.date)}
+                    </td>
+                    <td className="px-4 py-2 text-sm text-text-primary">
+                      {t.title}
+                    </td>
+                    <td className="px-4 py-2 text-sm text-text-secondary">
+                      <span className="rounded-full bg-surface-2 px-2 py-0.5 text-xs text-text-secondary">
+                        {t.category}
+                      </span>
+                    </td>
+                    <td
+                      className={`px-4 py-2 text-right text-sm font-medium tabular-nums ${
+                        t.isIncome ? "text-good" : "text-critical"
+                      }`}
+                    >
+                      {t.isIncome ? "+" : "-"}
+                      {formatCurrency(t.amount, profile.currency)}
+                    </td>
+                    <td className="px-4 py-2 text-sm text-text-secondary">
+                      {t.isTransfer
+                        ? "Transferencia"
+                        : t.isIncome
+                          ? "Ingreso"
+                          : "Gasto"}
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
         {hasMore && (
           <div className="border-t border-border-soft p-3 text-center">
             <button
               onClick={loadMore}
               disabled={loadingMore}
-              className="rounded-md border border-border-soft px-4 py-1.5 text-sm text-slate-200 hover:bg-surface-2 disabled:opacity-50"
+              className="rounded-full border border-border-soft px-4 py-1.5 text-sm text-text-primary hover:bg-surface-2 disabled:opacity-50"
             >
               {loadingMore ? "Cargando…" : "Cargar más"}
             </button>
@@ -530,7 +530,7 @@ function SummaryCard({
   hint,
   tone,
 }: {
-  icon: React.ReactNode;
+  icon: string;
   label: string;
   value: string;
   hint?: string;
@@ -543,18 +543,18 @@ function SummaryCard({
   }[tone];
 
   return (
-    <div className="glow-ring rounded-lg border border-border-soft bg-surface p-4">
+    <div className="card-shadow rounded-2xl border border-border-soft bg-surface p-4">
       <div className="flex items-center justify-between">
         <p className="text-xs font-medium uppercase tracking-wide text-text-muted">
           {label}
         </p>
         <span
-          className={`flex h-7 w-7 items-center justify-center rounded-md ${toneClasses}`}
+          className={`flex h-8 w-8 items-center justify-center rounded-full ${toneClasses}`}
         >
-          {icon}
+          <Icon name={icon} size={16} />
         </span>
       </div>
-      <p className="mt-2 text-lg font-semibold text-slate-100">{value}</p>
+      <p className="mt-2 text-lg font-semibold text-text-primary">{value}</p>
       {hint && <p className="mt-0.5 text-xs text-text-muted">{hint}</p>}
     </div>
   );

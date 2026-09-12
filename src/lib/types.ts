@@ -49,17 +49,28 @@ export interface Budget {
   createdAt: string;
 }
 
-export type FeedEventType =
-  "transaction" | "goal_created" | "goal_updated" | "account_created";
+export interface Category {
+  id: string;
+  userId: string;
+  name: string;
+  iconCodePoint?: number;
+  createdAt: string;
+}
+
+export type FeedEntity =
+  "transaction" | "account" | "goal" | "budget" | "category" | "user";
+
+export type FeedAction = "created" | "modified" | "deleted";
 
 export interface FeedEvent {
   id: string;
-  type: FeedEventType;
+  entity: FeedEntity;
+  action: FeedAction;
   userId: string;
   username: string;
   message: string;
   /** ms since epoch for live events; Date.parse(createdAt/date) for historical ones */
   createdAt: number;
-  /** true = money in/positive (income, goal contribution), false = money out (expense), undefined = neutral */
+  /** only meaningful for transaction entities: true = income, false = expense */
   positive?: boolean;
 }

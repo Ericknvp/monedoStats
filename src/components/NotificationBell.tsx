@@ -2,30 +2,10 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import {
-  Bell,
-  ArrowDownCircle,
-  ArrowUpCircle,
-  Landmark,
-  Target,
-} from "lucide-react";
 import { useNotifications } from "@/contexts/NotificationContext";
 import { timeAgo } from "@/lib/format";
-import { FeedEvent } from "@/lib/types";
-
-function EventIcon({ event }: { event: FeedEvent }) {
-  if (event.type === "transaction") {
-    return event.positive ? (
-      <ArrowDownCircle size={18} className="text-good" strokeWidth={2} />
-    ) : (
-      <ArrowUpCircle size={18} className="text-critical" strokeWidth={2} />
-    );
-  }
-  if (event.type === "account_created") {
-    return <Landmark size={18} className="text-accent" strokeWidth={2} />;
-  }
-  return <Target size={18} className="text-accent" strokeWidth={2} />;
-}
+import { Icon } from "@/components/Icon";
+import { FeedEventIcon } from "@/components/FeedEventIcon";
 
 export function NotificationBell() {
   const { events, unreadCount, markAllRead } = useNotifications();
@@ -54,20 +34,20 @@ export function NotificationBell() {
     <div className="relative" ref={ref}>
       <button
         onClick={toggle}
-        className="relative flex h-9 w-9 items-center justify-center rounded-full border border-border-soft bg-surface-2 text-text-secondary transition-colors hover:text-slate-100"
+        className="relative flex h-10 w-10 items-center justify-center rounded-full text-text-secondary transition-colors hover:bg-surface-2 hover:text-text-primary"
         aria-label="Notificaciones"
       >
-        <Bell size={18} strokeWidth={2} />
+        <Icon name="notifications" size={22} />
         {unreadCount > 0 && (
-          <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-critical px-1 text-[10px] font-semibold text-white shadow-[0_0_8px_-1px_rgba(248,113,113,0.7)]">
+          <span className="absolute right-1.5 top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-critical px-1 text-[10px] font-semibold text-white">
             {unreadCount > 99 ? "99+" : unreadCount}
           </span>
         )}
       </button>
 
       {open && (
-        <div className="glow-ring absolute right-0 z-40 mt-2 w-96 max-h-[28rem] overflow-y-auto rounded-lg border border-border-soft bg-surface">
-          <div className="border-b border-border-soft px-4 py-2.5 text-sm font-semibold text-slate-100">
+        <div className="card-shadow fixed inset-x-4 top-16 z-40 max-h-[70vh] overflow-y-auto rounded-2xl border border-border-soft bg-surface sm:absolute sm:inset-x-auto sm:right-0 sm:top-full sm:mt-2 sm:max-h-[28rem] sm:w-96">
+          <div className="border-b border-border-soft px-4 py-2.5 text-sm font-semibold text-text-primary">
             Actividad reciente
           </div>
           {events.length === 0 ? (
@@ -86,10 +66,10 @@ export function NotificationBell() {
                     className="flex w-full items-start gap-3 px-4 py-3 text-left text-sm hover:bg-surface-2"
                   >
                     <span className="mt-0.5 shrink-0">
-                      <EventIcon event={evt} />
+                      <FeedEventIcon event={evt} />
                     </span>
                     <span>
-                      <p className="text-slate-200">{evt.message}</p>
+                      <p className="text-text-primary">{evt.message}</p>
                       <p className="mt-0.5 text-xs text-text-muted">
                         {timeAgo(evt.createdAt)}
                       </p>
