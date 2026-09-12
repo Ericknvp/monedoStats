@@ -1,17 +1,79 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #0a0f1c;
+  --foreground: #f1f5f9;
+  --page-plane: #0a0f1c;
+  --surface: #101828;
+  --surface-2: #16213a;
+  --border-soft: rgba(148, 163, 184, 0.14);
+  --text-primary: #f1f5f9;
+  --text-secondary: #93a2ba;
+  --text-muted: #64748b;
+  --accent: #4a8dfa;
+  --accent-dark: #2563eb;
+  --accent-soft: rgba(74, 141, 250, 0.14);
+  --accent-glow: rgba(74, 141, 250, 0.35);
+  --good: #34d399;
+  --good-soft: rgba(52, 211, 153, 0.12);
+  --critical: #f87171;
+  --critical-soft: rgba(248, 113, 113, 0.12);
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-page: var(--page-plane);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-border-soft: var(--border-soft);
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-muted: var(--text-muted);
+  --color-accent: var(--accent);
+  --color-accent-dark: var(--accent-dark);
+  --color-accent-soft: var(--accent-soft);
+  --color-good: var(--good);
+  --color-good-soft: var(--good-soft);
+  --color-critical: var(--critical);
+  --color-critical-soft: var(--critical-soft);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
 body {
   font-family: Arial, Helvetica, sans-serif;
+  background:
+    radial-gradient(
+      1200px 600px at 15% -10%,
+      rgba(74, 141, 250, 0.16),
+      transparent 60%
+    ),
+    var(--page-plane);
+  background-attachment: fixed;
+}
+
+::selection {
+  background: var(--accent-glow);
+}
+
+.glow-ring {
+  box-shadow:
+    0 0 0 1px var(--border-soft),
+    0 8px 24px -8px var(--accent-glow);
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-toast-in {
+  animation: toast-in 0.18s ease-out;
 }

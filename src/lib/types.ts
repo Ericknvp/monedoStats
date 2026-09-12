@@ -58,4 +58,6 @@ export interface FeedEvent {
   username: string;
   message: string;
   createdAt: number;
+  /** true = money in/positive (income, goal contribution), false = money out (expense), undefined = neutral */
+  positive?: boolean;
 }

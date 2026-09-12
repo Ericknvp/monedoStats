@@ -22,7 +22,7 @@ export default function DashboardLayout({
   if (loading || !user) {
     return (
       <div className="flex flex-1 items-center justify-center">
-        <p className="text-sm text-slate-500">Cargando…</p>
+        <p className="text-sm text-text-secondary">Cargando…</p>
       </div>
     );
   }
@@ -32,12 +32,10 @@ export default function DashboardLayout({
       <div className="flex min-h-screen flex-1">
         <Sidebar />
         <div className="flex flex-1 flex-col">
-          <header className="flex h-14 items-center justify-end border-b border-slate-200 bg-white px-6">
+          <header className="flex h-14 items-center justify-end border-b border-border-soft bg-surface/70 px-6 backdrop-blur-md">
             <NotificationBell />
           </header>
-          <main className="flex-1 overflow-y-auto bg-slate-50 p-6">
-            {children}
-          </main>
+          <main className="flex-1 overflow-y-auto p-6">{children}</main>
         </div>
       </div>
     </NotificationProvider>

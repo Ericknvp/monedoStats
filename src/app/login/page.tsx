@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { signInWithEmailAndPassword } from "firebase/auth";
+import { ShieldCheck } from "lucide-react";
 import { auth } from "@/lib/firebase";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -36,16 +37,21 @@ export default function LoginPage() {
     <div className="flex flex-1 items-center justify-center px-4">
       <form
         onSubmit={handleSubmit}
-        className="w-full max-w-sm rounded-xl border border-slate-200 bg-white p-8 shadow-sm"
+        className="glow-ring w-full max-w-sm rounded-2xl border border-border-soft bg-surface p-8"
       >
-        <h1 className="text-xl font-semibold text-slate-900">Monedo Admin</h1>
-        <p className="mt-1 text-sm text-slate-500">
+        <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-accent to-accent-dark shadow-[0_0_20px_-2px_var(--accent-glow)]">
+          <ShieldCheck size={22} className="text-white" strokeWidth={2} />
+        </div>
+        <h1 className="mt-4 text-xl font-semibold text-slate-100">
+          Monedo Admin
+        </h1>
+        <p className="mt-1 text-sm text-text-secondary">
           Acceso restringido — solo administrador.
         </p>
 
         <div className="mt-6 space-y-4">
           <div>
-            <label className="block text-sm font-medium text-slate-700">
+            <label className="block text-sm font-medium text-text-secondary">
               Email
             </label>
             <input
@@ -53,11 +59,11 @@ export default function LoginPage() {
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500"
+              className="mt-1 w-full rounded-md border border-border-soft bg-surface-2 px-3 py-2 text-sm text-slate-100 focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-700">
+            <label className="block text-sm font-medium text-text-secondary">
               Contraseña
             </label>
             <input
@@ -65,16 +71,16 @@ export default function LoginPage() {
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500"
+              className="mt-1 w-full rounded-md border border-border-soft bg-surface-2 px-3 py-2 text-sm text-slate-100 focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
             />
           </div>
 
-          {error && <p className="text-sm text-red-600">{error}</p>}
+          {error && <p className="text-sm text-red-400">{error}</p>}
 
           <button
             type="submit"
             disabled={submitting}
-            className="w-full rounded-md bg-slate-900 px-3 py-2 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-50"
+            className="w-full rounded-md bg-gradient-to-br from-accent to-accent-dark px-3 py-2 text-sm font-medium text-white shadow-[0_0_20px_-4px_var(--accent-glow)] transition-opacity hover:opacity-90 disabled:opacity-50"
           >
             {submitting ? "Entrando…" : "Entrar"}
           </button>

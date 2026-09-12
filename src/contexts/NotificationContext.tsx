@@ -9,6 +9,7 @@ import {
   ReactNode,
 } from "react";
 import { collection, onSnapshot } from "firebase/firestore";
+import { ArrowDownCircle, ArrowUpCircle, Target } from "lucide-react";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/contexts/AuthContext";
 import { formatCurrency } from "@/lib/format";
@@ -18,6 +19,28 @@ const MAX_EVENTS = 200;
 const TOAST_DURATION_MS = 6000;
 
 type ToastItem = FeedEvent;
+
+function ToastIcon({ event }: { event: FeedEvent }) {
+  const className = "mt-0.5 shrink-0";
+  if (event.type === "transaction") {
+    return event.positive ? (
+      <ArrowDownCircle
+        size={18}
+        className={`${className} text-good`}
+        strokeWidth={2}
+      />
+    ) : (
+      <ArrowUpCircle
+        size={18}
+        className={`${className} text-critical`}
+        strokeWidth={2}
+      />
+    );
+  }
+  return (
+    <Target size={18} className={`${className} text-accent`} strokeWidth={2} />
+  );
+}
 
 interface NotificationContextValue {
   events: FeedEvent[];
@@ -90,6 +113,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
             type: "transaction",
             userId: data.userId,
             username,
+            positive: !!data.isIncome,
             message: `${username} registró ${kind} de ${formatCurrency(
               data.amount || 0,
             )} en ${data.category || "Sin categoría"}`,
@@ -120,6 +144,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
               username,
               message: `${username} creó una nueva meta: "${data.title}"`,
             });
+            return;
           } else if (change.type === "modified") {
             const prevAmount =
               goalAmountsRef.current[change.doc.id] ?? data.savedAmount;
@@ -159,12 +184,13 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
       }}
     >
       {children}
-      <div className="fixed bottom-4 right-4 z-50 flex flex-col gap-2 w-80">
+      <div className="fixed bottom-4 right-4 z-50 flex w-80 flex-col gap-2">
         {toasts.map((t) => (
           <div
             key={t.id}
-            className="rounded-lg bg-slate-900 text-white shadow-lg px-4 py-3 text-sm border border-slate-700 animate-in fade-in slide-in-from-bottom-2"
+            className="glow-ring animate-toast-in flex items-start gap-2.5 rounded-lg border border-border-soft bg-surface px-4 py-3 text-sm text-slate-200"
           >
+            <ToastIcon event={t} />
             {t.message}
           </div>
         ))}
