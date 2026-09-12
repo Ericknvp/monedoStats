@@ -10,15 +10,42 @@ import { useActivityFeed } from "@/hooks/useActivityFeed";
 
 const ACCOUNTS_PAGE_SIZE = 15;
 
+type SortOption = "recent" | "oldest" | "az" | "za" | "highest" | "lowest";
+
+const SORT_LABELS: Record<SortOption, string> = {
+  recent: "Más reciente",
+  oldest: "Menos reciente",
+  az: "Nombre (A-Z)",
+  za: "Nombre (Z-A)",
+  highest: "Mayor saldo",
+  lowest: "Menor saldo",
+};
+
 export default function AccountsPage() {
   const { accounts, usersMap, loading, error } = useActivityFeed();
   const [page, setPage] = useState(1);
+  const [sortBy, setSortBy] = useState<SortOption>("recent");
 
-  const totalPages = Math.max(
-    1,
-    Math.ceil(accounts.length / ACCOUNTS_PAGE_SIZE),
-  );
-  const paged = accounts.slice(
+  const sorted = [...accounts].sort((a, b) => {
+    switch (sortBy) {
+      case "oldest":
+        return a.createdAt < b.createdAt ? -1 : 1;
+      case "az":
+        return a.name.localeCompare(b.name);
+      case "za":
+        return b.name.localeCompare(a.name);
+      case "highest":
+        return b.balance - a.balance;
+      case "lowest":
+        return a.balance - b.balance;
+      case "recent":
+      default:
+        return a.createdAt < b.createdAt ? 1 : -1;
+    }
+  });
+
+  const totalPages = Math.max(1, Math.ceil(sorted.length / ACCOUNTS_PAGE_SIZE));
+  const paged = sorted.slice(
     (page - 1) * ACCOUNTS_PAGE_SIZE,
     page * ACCOUNTS_PAGE_SIZE,
   );
@@ -29,14 +56,41 @@ export default function AccountsPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="font-display text-lg font-bold text-text-primary">
-          Cuentas
-        </h1>
-        <p className="text-sm text-text-secondary">
-          Últimas cuentas registradas por todos los usuarios, la más reciente
-          primero.
-        </p>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="font-display text-lg font-bold text-text-primary">
+            Cuentas
+          </h1>
+          <p className="text-sm text-text-secondary">
+            Últimas cuentas registradas por todos los usuarios.
+          </p>
+        </div>
+        <div className="relative">
+          <Icon
+            name="sort"
+            size={18}
+            className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-text-muted"
+          />
+          <select
+            value={sortBy}
+            onChange={(e) => {
+              setSortBy(e.target.value as SortOption);
+              setPage(1);
+            }}
+            className="w-full appearance-none rounded-full border border-border-soft bg-surface py-2 pl-10 pr-8 text-sm text-text-primary focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent sm:w-48"
+          >
+            {(Object.keys(SORT_LABELS) as SortOption[]).map((key) => (
+              <option key={key} value={key}>
+                {SORT_LABELS[key]}
+              </option>
+            ))}
+          </select>
+          <Icon
+            name="expand_more"
+            size={18}
+            className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-text-muted"
+          />
+        </div>
       </div>
 
       <section className="card-shadow rounded-2xl border border-border-soft bg-surface">
