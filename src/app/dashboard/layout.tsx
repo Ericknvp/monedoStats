@@ -31,9 +31,9 @@ export default function DashboardLayout({
 
   return (
     <NotificationProvider>
-      <div className="flex h-screen flex-1 overflow-hidden">
+      <div className="flex h-screen overflow-hidden">
         <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-        <div className="flex min-w-0 flex-1 flex-col">
+        <div className="flex min-h-0 min-w-0 flex-1 flex-col">
           <header className="flex h-16 items-center justify-between gap-3 border-b border-border-soft bg-surface px-4 sm:px-6">
             <button
               onClick={() => setSidebarOpen(true)}
