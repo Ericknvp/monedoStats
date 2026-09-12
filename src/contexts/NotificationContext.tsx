@@ -2,6 +2,7 @@
 
 import {
   createContext,
+  useCallback,
   useContext,
   useEffect,
   useRef,
@@ -9,7 +10,7 @@ import {
   ReactNode,
 } from "react";
 import { collection, onSnapshot } from "firebase/firestore";
-import { ArrowDownCircle, ArrowUpCircle, Target } from "lucide-react";
+import { ArrowDownCircle, ArrowUpCircle, Landmark, Target } from "lucide-react";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/contexts/AuthContext";
 import { formatCurrency } from "@/lib/format";
@@ -37,6 +38,15 @@ function ToastIcon({ event }: { event: FeedEvent }) {
       />
     );
   }
+  if (event.type === "account_created") {
+    return (
+      <Landmark
+        size={18}
+        className={`${className} text-accent`}
+        strokeWidth={2}
+      />
+    );
+  }
   return (
     <Target size={18} className={`${className} text-accent`} strokeWidth={2} />
   );
@@ -46,12 +56,14 @@ interface NotificationContextValue {
   events: FeedEvent[];
   unreadCount: number;
   markAllRead: () => void;
+  resolveUsername: (userId: string) => string;
 }
 
 const NotificationContext = createContext<NotificationContextValue>({
   events: [],
   unreadCount: 0,
   markAllRead: () => {},
+  resolveUsername: (userId) => userId,
 });
 
 export function NotificationProvider({ children }: { children: ReactNode }) {
@@ -64,6 +76,9 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
   const goalAmountsRef = useRef<Record<string, number>>({});
   const isInitialTx = useRef(true);
   const isInitialGoals = useRef(true);
+  const isInitialAccounts = useRef(true);
+
+  const markAllRead = useCallback(() => setUnreadCount(0), []);
 
   function pushEvent(evt: Omit<FeedEvent, "id" | "createdAt">) {
     const fullEvent: FeedEvent = {
@@ -166,12 +181,36 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
       (err) => console.error("goals listener failed:", err),
     );
 
+    const unsubAccounts = onSnapshot(
+      collection(db, "accounts"),
+      (snap) => {
+        if (isInitialAccounts.current) {
+          isInitialAccounts.current = false;
+          return;
+        }
+        snap.docChanges().forEach((change) => {
+          if (change.type !== "added") return;
+          const data = change.doc.data();
+          const username = usernameFor(data.userId);
+          pushEvent({
+            type: "account_created",
+            userId: data.userId,
+            username,
+            message: `${username} creó una nueva cuenta: "${data.name}"`,
+          });
+        });
+      },
+      (err) => console.error("accounts listener failed:", err),
+    );
+
     return () => {
       unsubUsers();
       unsubTx();
       unsubGoals();
+      unsubAccounts();
       isInitialTx.current = true;
       isInitialGoals.current = true;
+      isInitialAccounts.current = true;
     };
   }, [user]);
 
@@ -180,7 +219,8 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
       value={{
         events,
         unreadCount,
-        markAllRead: () => setUnreadCount(0),
+        markAllRead,
+        resolveUsername: usernameFor,
       }}
     >
       {children}

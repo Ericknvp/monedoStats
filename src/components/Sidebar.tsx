@@ -2,13 +2,16 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutGrid, LogOut } from "lucide-react";
+import { Activity, LayoutGrid, LogOut } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useNotifications } from "@/contexts/NotificationContext";
 
 export function Sidebar() {
   const pathname = usePathname();
   const { logout, user } = useAuth();
+  const { unreadCount } = useNotifications();
   const isProfiles = pathname === "/dashboard";
+  const isActivity = pathname === "/dashboard/activity";
 
   return (
     <aside className="flex h-full w-60 shrink-0 flex-col border-r border-border-soft bg-surface/80 backdrop-blur-md">
@@ -32,6 +35,22 @@ export function Sidebar() {
         >
           <LayoutGrid size={17} strokeWidth={2} />
           Perfiles
+        </Link>
+        <Link
+          href="/dashboard/activity"
+          className={`flex items-center gap-2.5 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
+            isActivity
+              ? "bg-accent-soft text-accent shadow-[inset_0_0_0_1px_var(--accent-glow)]"
+              : "text-text-secondary hover:bg-surface-2 hover:text-slate-100"
+          }`}
+        >
+          <Activity size={17} strokeWidth={2} />
+          Actividad
+          {unreadCount > 0 && (
+            <span className="ml-auto flex h-4 min-w-4 items-center justify-center rounded-full bg-critical px-1 text-[10px] font-semibold text-white">
+              {unreadCount > 99 ? "99+" : unreadCount}
+            </span>
+          )}
         </Link>
       </nav>
 

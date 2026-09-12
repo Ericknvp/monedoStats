@@ -49,7 +49,8 @@ export interface Budget {
   createdAt: string;
 }
 
-export type FeedEventType = "transaction" | "goal_created" | "goal_updated";
+export type FeedEventType =
+  "transaction" | "goal_created" | "goal_updated" | "account_created";
 
 export interface FeedEvent {
   id: string;
@@ -57,6 +58,7 @@ export interface FeedEvent {
   userId: string;
   username: string;
   message: string;
+  /** ms since epoch for live events; Date.parse(createdAt/date) for historical ones */
   createdAt: number;
   /** true = money in/positive (income, goal contribution), false = money out (expense), undefined = neutral */
   positive?: boolean;

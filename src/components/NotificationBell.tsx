@@ -2,7 +2,13 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Bell, ArrowDownCircle, ArrowUpCircle, Target } from "lucide-react";
+import {
+  Bell,
+  ArrowDownCircle,
+  ArrowUpCircle,
+  Landmark,
+  Target,
+} from "lucide-react";
 import { useNotifications } from "@/contexts/NotificationContext";
 import { timeAgo } from "@/lib/format";
 import { FeedEvent } from "@/lib/types";
@@ -14,6 +20,9 @@ function EventIcon({ event }: { event: FeedEvent }) {
     ) : (
       <ArrowUpCircle size={18} className="text-critical" strokeWidth={2} />
     );
+  }
+  if (event.type === "account_created") {
+    return <Landmark size={18} className="text-accent" strokeWidth={2} />;
   }
   return <Target size={18} className="text-accent" strokeWidth={2} />;
 }
