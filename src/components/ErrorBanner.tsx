@@ -11,5 +11,8 @@ export function permissionErrorMessage(err: unknown): string {
   if (code === "permission-denied") {
     return "Firestore rechazó esta lectura (permission-denied). Verifica que tu cuenta esté autorizada como admin en firestore.rules.";
   }
-  return "Ocurrió un error cargando los datos. Revisa la consola para más detalle.";
+  if (code === "failed-precondition") {
+    return "Falta un índice en Firestore para esta consulta (failed-precondition). Si acabas de desplegar uno, espera 1-2 minutos y recarga.";
+  }
+  return `Ocurrió un error cargando los datos${code ? ` (${code})` : ""}. Revisa la consola para más detalle.`;
 }
