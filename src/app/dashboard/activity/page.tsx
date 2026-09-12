@@ -223,6 +223,23 @@ export default function ActivityPage() {
     feedPage * FEED_PAGE_SIZE,
   );
 
+  const leaderboard = useMemo(() => {
+    const byUser = new Map<string, { username: string; count: number }>();
+    for (const evt of feed) {
+      const entry = byUser.get(evt.userId) || {
+        username: evt.username,
+        count: 0,
+      };
+      entry.count += 1;
+      entry.username = evt.username;
+      byUser.set(evt.userId, entry);
+    }
+    return Array.from(byUser.entries())
+      .map(([userId, v]) => ({ userId, ...v }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 5);
+  }, [feed]);
+
   if (error) {
     return <ErrorBanner message={error} />;
   }
@@ -237,6 +254,45 @@ export default function ActivityPage() {
           Cuentas nuevas y actividad reciente de todos los usuarios.
         </p>
       </div>
+
+      {!loading && leaderboard.length > 0 && (
+        <section className="card-shadow rounded-2xl border border-border-soft bg-surface">
+          <h2 className="flex items-center gap-2 border-b border-border-soft px-4 py-3 text-sm font-semibold text-text-primary">
+            <Icon
+              name="local_fire_department"
+              size={18}
+              className="text-accent"
+            />
+            Más activos recientemente
+          </h2>
+          <ul className="divide-y divide-border-soft">
+            {leaderboard.map((u, i) => (
+              <li key={u.userId}>
+                <Link
+                  href={`/dashboard/profile/${u.userId}`}
+                  className="flex items-center gap-3 px-4 py-3 text-sm hover:bg-surface-2"
+                >
+                  <span
+                    className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-semibold ${
+                      i === 0
+                        ? "bg-accent text-on-accent"
+                        : "bg-surface-2 text-text-secondary"
+                    }`}
+                  >
+                    {i + 1}
+                  </span>
+                  <span className="flex-1 font-medium text-text-primary">
+                    {u.username}
+                  </span>
+                  <span className="text-xs text-text-muted">
+                    {u.count} evento{u.count === 1 ? "" : "s"}
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       <section className="card-shadow rounded-2xl border border-border-soft bg-surface">
         <h2 className="flex items-center gap-2 border-b border-border-soft px-4 py-3 text-sm font-semibold text-text-primary">
