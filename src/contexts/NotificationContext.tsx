@@ -9,7 +9,7 @@ import {
   useState,
   ReactNode,
 } from "react";
-import { collection, onSnapshot } from "firebase/firestore";
+import { collection, limit, onSnapshot, orderBy, query } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/contexts/AuthContext";
 import { formatCurrency } from "@/lib/format";
@@ -18,6 +18,15 @@ import { FeedEventIcon } from "@/components/FeedEventIcon";
 
 const MAX_EVENTS = 200;
 const TOAST_DURATION_MS = 6000;
+
+// Bounded so each session's initial snapshot cost stays constant instead of
+// scaling with the full history of every collection (that pattern exhausted
+// the Firestore free-tier daily read quota once already). `users` is left
+// unbounded since it's naturally capped by real signups, not by activity.
+// Trade-off: a doc that falls out of this window because newer ones took its
+// spot also fires a "removed" change, indistinguishable here from an actual
+// delete — rare at this window size, and worth it over the outage risk.
+const RECENT_WINDOW = 100;
 
 interface NotificationContextValue {
   events: FeedEvent[];
@@ -121,7 +130,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     );
 
     const unsubTx = onSnapshot(
-      collection(db, "transactions"),
+      query(collection(db, "transactions"), orderBy("date", "desc"), limit(RECENT_WINDOW)),
       (snap) => {
         if (isInitialTx.current) {
           isInitialTx.current = false;
@@ -167,7 +176,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     );
 
     const unsubGoals = onSnapshot(
-      collection(db, "goals"),
+      query(collection(db, "goals"), orderBy("createdAt", "desc"), limit(RECENT_WINDOW)),
       (snap) => {
         if (isInitialGoals.current) {
           snap.forEach((doc) => {
@@ -220,7 +229,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     );
 
     const unsubAccounts = onSnapshot(
-      collection(db, "accounts"),
+      query(collection(db, "accounts"), orderBy("createdAt", "desc"), limit(RECENT_WINDOW)),
       (snap) => {
         if (isInitialAccounts.current) {
           isInitialAccounts.current = false;
@@ -260,7 +269,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     );
 
     const unsubBudgets = onSnapshot(
-      collection(db, "budgets"),
+      query(collection(db, "budgets"), orderBy("createdAt", "desc"), limit(RECENT_WINDOW)),
       (snap) => {
         if (isInitialBudgets.current) {
           isInitialBudgets.current = false;
@@ -301,7 +310,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     );
 
     const unsubCategories = onSnapshot(
-      collection(db, "categories"),
+      query(collection(db, "categories"), orderBy("createdAt", "desc"), limit(RECENT_WINDOW)),
       (snap) => {
         if (isInitialCategories.current) {
           isInitialCategories.current = false;
